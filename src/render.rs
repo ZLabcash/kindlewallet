@@ -83,7 +83,7 @@ impl Page {
 
     /// A QR code `size` pixels wide (rounded down to whole modules), centred on `cx`.
     pub fn qr(&mut self, cx: usize, y: usize, size: usize, data: &str) -> bool {
-        let Some(qr) = zflip_core::qr::Qr::encode(data.as_bytes()) else { return false };
+        let Some(qr) = zfirm_core::qr::Qr::encode(data.as_bytes()) else { return false };
         let n = qr.size + 8; // quiet zone of 4 modules each side
         let m = (size / n).max(1);
         let x0 = cx.saturating_sub(n * m / 2);

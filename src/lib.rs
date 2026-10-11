@@ -14,7 +14,7 @@ pub mod coins;
 pub mod render;
 pub mod vault;
 
-pub use zflip_core::mnemonic;
+pub use zfirm_core::mnemonic;
 
 /// A fresh 24-word phrase from the system's randomness.
 pub fn new_phrase() -> String {

@@ -4,7 +4,7 @@ use bech32::{Hrp, segwit};
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
 use sha3::Keccak256;
-use zflip_core::Network;
+use zfirm_core::Network;
 
 use crate::bip32::{ExtendedKey, HARDENED};
 
@@ -46,13 +46,13 @@ impl Coin {
 
 /// Orchard unified address j of ZIP 32 account 0 (diversified: unlinkable).
 pub fn zcash(seed: &[u8; 64], j: u32) -> Option<String> {
-    let account = zflip_core::account::Account::from_seed(seed, Network::Main, 0).ok()?;
+    let account = zfirm_core::account::Account::from_seed(seed, Network::Main, 0).ok()?;
     Some(account.encode_address(j))
 }
 
 /// The Zcash viewing key, for the phone app (it can see, never spend).
 pub fn zcash_ufvk(seed: &[u8; 64]) -> Option<String> {
-    Some(zflip_core::account::Account::from_seed(seed, Network::Main, 0).ok()?.ufvk())
+    Some(zfirm_core::account::Account::from_seed(seed, Network::Main, 0).ok()?.ufvk())
 }
 
 /// BIP 84: m/84'/0'/0'/0/i, P2WPKH (bc1q…).
