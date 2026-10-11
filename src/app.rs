@@ -303,7 +303,7 @@ impl Ui<'_> {
         self.p.fill(0, 0, self.w, 22 * s, true);
         // White text on the black band: draw, then invert the band.
         let mut band = Page::new(self.w, 22 * s);
-        band.text_centered(7 * s, "ZKindle", s);
+        band.text_centered(7 * s, "KindleWallet", s);
         for y in 0..22 * s {
             for x in 0..self.w {
                 if band_ink(&band, x, y) {

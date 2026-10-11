@@ -529,6 +529,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "kindlewallet"
+version = "0.1.0"
+dependencies = [
+ "aes-gcm",
+ "argon2",
+ "bech32",
+ "font8x8",
+ "getrandom",
+ "hex",
+ "hmac",
+ "k256",
+ "libc",
+ "png",
+ "ripemd",
+ "sha2",
+ "sha3",
+ "zeroize",
+ "zfirm-core",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1060,6 +1081,7 @@ version = "0.1.0"
 dependencies = [
  "aes",
  "blake2b_simd",
+ "chacha20poly1305",
  "f4jumble",
  "nonempty",
  "orchard",
@@ -1080,27 +1102,6 @@ dependencies = [
  "memuse",
  "subtle",
  "zcash_spec",
-]
-
-[[package]]
-name = "zkindle"
-version = "0.1.0"
-dependencies = [
- "aes-gcm",
- "argon2",
- "bech32",
- "font8x8",
- "getrandom",
- "hex",
- "hmac",
- "k256",
- "libc",
- "png",
- "ripemd",
- "sha2",
- "sha3",
- "zeroize",
- "zfirm-core",
 ]
 
 [[package]]

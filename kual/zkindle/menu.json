@@ -1,5 +1,0 @@
-{
-  "items": [
-    { "name": "ZKindle wallet", "priority": 0, "action": "./start.sh" }
-  ]
-}

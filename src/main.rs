@@ -1,7 +1,7 @@
-//! ZKindle on the Kindle: takes over the screen and the touch panel, draws each
+//! KindleWallet on the Kindle: takes over the screen and the touch panel, draws each
 //! screen as a PNG with the Kindle's `eips`, and gives everything back on exit.
 //!
-//! `zkindle --preview OUT_DIR` instead plays a scripted tour on the desktop and
+//! `kindlewallet --preview OUT_DIR` instead plays a scripted tour on the desktop and
 //! saves every screen as a PNG (600×800, a Kindle 10th generation's screen).
 
 use std::{
@@ -12,7 +12,7 @@ use std::{
     process::Command,
 };
 
-use zkindle::app::{Action, App};
+use kindlewallet::app::{Action, App};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -20,7 +20,7 @@ fn main() {
         preview(Path::new(args.get(2).map_or("preview", String::as_str)));
         return;
     }
-    let dir = std::env::var("ZKINDLE_DIR").map_or_else(|_| PathBuf::from("/mnt/us/zkindle"), PathBuf::from);
+    let dir = std::env::var("KINDLEWALLET_DIR").map_or_else(|_| PathBuf::from("/mnt/us/kindlewallet"), PathBuf::from);
     kindle(dir);
 }
 
@@ -46,7 +46,7 @@ fn preview(out: &Path) {
         app.act(Action::PinOk);
     }
     shot(&mut app, "home");
-    for coin in zkindle::coins::Coin::ALL {
+    for coin in kindlewallet::coins::Coin::ALL {
         app.act(Action::Open(coin));
         shot(&mut app, coin.ticker());
         app.act(Action::NewAddress);
@@ -78,7 +78,7 @@ fn screen_size() -> (usize, usize) {
 }
 
 fn show(app: &mut App, w: usize, h: usize) {
-    let path = "/tmp/zkindle.png";
+    let path = "/tmp/kindlewallet.png";
     if std::fs::write(path, app.draw(w, h).png()).is_ok() {
         sh(&format!("eips -f -g {path} >/dev/null 2>&1"));
     }
@@ -124,7 +124,7 @@ impl Touch {
             let (Some(max_x), Some(max_y)) = (abs_max(fd, ABS_MT_POSITION_X), abs_max(fd, ABS_MT_POSITION_Y)) else {
                 continue;
             };
-            // Ours alone while ZKindle runs.
+            // Ours alone while KindleWallet runs.
             unsafe { libc::ioctl(fd, ioc(1, b'E', 0x90, 4) as _, 1i32) };
             eprintln!("touch: event{n}, max {max_x}x{max_y}, conf {conf:?}");
             return Some(Touch { file, max_x, max_y, swap: has("swap"), inv_x: has("invx"), inv_y: has("invy") });

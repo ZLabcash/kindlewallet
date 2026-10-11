@@ -1,4 +1,4 @@
-//! ZKindle: an offline wallet for a jailbroken Kindle.
+//! KindleWallet: an offline wallet for a jailbroken Kindle.
 //!
 //! One BIP 39 phrase, made on the device from its own randomness, gives:
 //! - Zcash shielded (Orchard, ZIP 32), with the code the ZFlip Flipper wallet uses;

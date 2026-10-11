@@ -4,6 +4,6 @@
 set -e
 cd "$(dirname "$0")"
 cargo zigbuild --release --target armv7-unknown-linux-musleabihf
-cp target/armv7-unknown-linux-musleabihf/release/zkindle kual/zkindle/bin/zkindle
+cp target/armv7-unknown-linux-musleabihf/release/kindlewallet kual/kindlewallet/bin/kindlewallet
 cargo run --release -q -- --preview preview
-echo "Copy kual/zkindle to the Kindle's extensions/ folder."
+echo "Copy kual/kindlewallet to the Kindle's extensions/ folder."

@@ -1,8 +1,8 @@
 [package]
-name = "zkindle"
+name = "kindlewallet"
 version = "0.1.0"
 edition = "2024"
-description = "ZKindle: an offline multi-coin wallet (Zcash shielded, Bitcoin, Ethereum) for a jailbroken Kindle"
+description = "KindleWallet: an offline multi-coin wallet (Zcash shielded, Bitcoin, Ethereum) for a jailbroken Kindle"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
