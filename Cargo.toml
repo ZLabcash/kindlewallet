@@ -6,7 +6,7 @@ description = "ZKindle: an offline multi-coin wallet (Zcash shielded, Bitcoin, E
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-zfirm-core = { path = "../flipper-zero/core", features = ["english"] }
+zfirm-core = { path = "../zfirm/core", features = ["english"] }
 k256 = { version = "0.13", default-features = false, features = ["arithmetic", "ecdsa", "std"] }
 hmac = "0.12"
 sha2 = "0.10"
