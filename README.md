@@ -30,3 +30,20 @@ Needs the [zfirm](https://github.com/ZLabcash/zfirm) repo next to this one as `z
 (shared Zcash core). `./build.sh` makes the Kindle binary into `kindle/` and renders
 `preview/`. Copy `kindle/kindlewallet` and `kindle/documents` to the root of the Kindle,
 then open "KindleWallet" from the library. See PLAN.md.
+
+## Install
+
+1. Jailbreak the Kindle (a Kindle 10th generation on 5.18.1 used
+   [SpiderCat](https://kindlemodding.org/jailbreaking/SpiderCat/): a book to open, no ads needed).
+2. `./build.sh`, then copy `kindle/kindlewallet` and `kindle/documents` to the root of the
+   Kindle's storage (and `kindle/kindlewallet/papers` after `papers/build.py`).
+3. Open "KindleWallet" from the library. Exit gives the Kindle back; the power button
+   locks the wallet.
+
+Experimental and not audited: try it with small amounts.
+
+## Licence
+
+MIT or Apache-2.0, at your option. The coin logos in `assets/logos` are their projects'
+trademarks, used to name the coins (from Simple Icons, web3icons, Base's brand kit and
+quantus.com); the whitepapers belong to their authors and are not kept here.
