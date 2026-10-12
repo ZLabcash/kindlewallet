@@ -1,3 +1,5 @@
 target/
 preview/
-kual/kindlewallet/bin/
+kindle/kindlewallet/bin/
+kindle/kindlewallet/papers/
+__pycache__/

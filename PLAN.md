@@ -1,10 +1,11 @@
 # KindleWallet — plan
 
-Portefeuille hors ligne sur une Kindle jailbreakée (Kindle 10e gén. / Paperwhite 4,
-logiciel 5.18.1, série G090VB…). Une phrase de 24 mots, créée sur la Kindle, donne :
-Zcash shielded (Orchard, même code que ZFlip), Bitcoin (BIP 84, bc1q…), Ethereum
-(BIP 44, 0x…). Phrase chiffrée par PIN (Argon2id + AES-256-GCM) dans
-/mnt/us/kindlewallet/wallet.zkv.
+Portefeuille hors ligne sur une Kindle jailbreakée (Kindle 10e gén., logiciel 5.18.1,
+série G090VB…). Une phrase de 24 mots, créée sur la Kindle, donne 10 cryptos : BTC, ETH,
+ZEC (shielded seulement), BNB, SOL, XMR, Robinhood Chain, Base, Arbitrum, Quantus.
+Accueil : les logos, 3 par ligne ; chaque crypto a son écran (QR, nouvelle adresse,
+et ses extras : clé de lecture Zcash, zpub Bitcoin, clé de vue et 25 mots Monero).
+Phrase chiffrée par PIN (Argon2id + AES-256-GCM) dans /mnt/us/kindlewallet/wallet.zkv.
 
 ## Fait
 - Dérivations vérifiées contre les vecteurs officiels (tests/vectors.rs).
@@ -14,8 +15,10 @@ Zcash shielded (Orchard, même code que ZFlip), Bitcoin (BIP 84, bc1q…), Ether
 - Binaire Kindle statique ARMv7 + extension KUAL (kual/kindlewallet).
 
 ## Étapes
-1. Jailbreak AdBreak (pubs activées, Kindle remplie pour bloquer les mises à jour).
-2. KUAL + MRPI, copier kual/kindlewallet dans extensions/, lancer « KindleWallet wallet ».
+1. Jailbreak : fait le 12/10/2026 avec SpiderCat (un livre à ouvrir, sans pubs).
+   Mises à jour bloquées par le jailbreak.
+2. Installation : copier kindle/kindlewallet et kindle/documents à la racine de la
+   Kindle, ouvrir « KindleWallet » dans la bibliothèque (scriptlet ; KUAL ne sert plus).
    Si le toucher est décalé : /mnt/us/kindlewallet/touch.conf avec `swap`, `invx`, `invy`.
    Journal : /mnt/us/kindlewallet/log.txt.
 3. Démarrage direct sur KindleWallet (mode dédié), pare-feu : seulement l'iPhone en Wi-Fi local.

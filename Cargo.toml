@@ -2,7 +2,7 @@
 name = "kindlewallet"
 version = "0.1.0"
 edition = "2024"
-description = "KindleWallet: an offline multi-coin wallet (Zcash shielded, Bitcoin, Ethereum) for a jailbroken Kindle"
+description = "KindleWallet: an offline multi-coin wallet (BTC, ETH, ZEC, BNB, SOL, XMR, Robinhood Chain, Base, Arbitrum, Quantus) for a jailbroken Kindle"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
@@ -20,6 +20,13 @@ png = "0.17"
 font8x8 = "0.3"
 zeroize = "1"
 libc = "0.2"
+curve25519-dalek = { version = "4", default-features = false, features = ["alloc", "zeroize", "precomputed-tables"] }
+ed25519-dalek = { version = "2", default-features = false, features = ["alloc", "zeroize"] }
+bs58 = "0.5"
+crc32fast = "1"
+ml-dsa = { version = "0.1", default-features = false, features = ["alloc", "zeroize"] }
+qp-poseidon-core = { version = "=3.1.0", default-features = false }
+blake2 = "0.10"
 
 [dev-dependencies]
 hex = "0.4"

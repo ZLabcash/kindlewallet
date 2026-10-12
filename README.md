@@ -1,9 +1,32 @@
 # KindleWallet
 
-A hardware wallet made from a jailbroken Kindle: offline, multi-coin, with its own e-ink screen. one 24-word phrase made on the
-device gives Zcash shielded (Orchard), Bitcoin (BIP 84) and Ethereum addresses, with
-QR codes on the e-ink screen. Sealed with a PIN (Argon2id + AES-256-GCM).
+A hardware wallet made from a jailbroken Kindle: offline, multi-coin, with its own e-ink
+screen. One 24-word phrase made on the device gives twelve coins, each on its own screen
+with a QR code:
 
-Needs the [zfirm](https://github.com/ZLabcash/zfirm) repo next to this one as `zfirm/` (shared Zcash core).
-`./build.sh` makes the Kindle binary into `kual/kindlewallet` and renders `preview/`.
-See PLAN.md.
+| Coin | Derivation | Address |
+|---|---|---|
+| Bitcoin | BIP 84, m/84'/0'/0'/0/i (+ zpub watch key) | bc1q… |
+| Ethereum, BNB Chain, Robinhood Chain, Base, Arbitrum | BIP 44, m/44'/60'/0'/0/i | one 0x… address |
+| Zcash | ZIP 32 Orchard, shielded only (+ viewing key) | u1… |
+| Solana | SLIP-10 ed25519, m/44'/501'/i'/0' | base58 |
+| Monero | Trezor's: SLIP-10 m/44'/128'/0', subaddresses (+ view key, 25 Monero words) | 4… / 8… |
+| Quantus | official wallet's: "Dilithium seed" tree m/44'/189189'/i'/0'/0', ML-DSA-87, Poseidon2, SS58 189 | qz… |
+
+XRP (BIP 44 m/44'/144'/0'/0/i, r…) and Tron (BIP 44 m/44'/195'/0'/0/i, T…) complete
+the twelve, on a home screen of logos three to a row: BTC ETH XRP / ZEC BNB SOL /
+XMR TRX BASE / ARB HOOD QTC.
+
+Each coin's whitepaper is readable on its screen: `papers/build.py` downloads them from
+the projects' own sites and lays them out again for the 600 × 800 screen (PDFs
+reflowed word by word, the way k2pdfopt does; Markdown and HTML set in Literata), into
+`kindle/kindlewallet/papers/<TICKER>/NNN.png`. Base and Robinhood Chain publish none.
+
+Each derivation is checked against its published vectors (`cargo test`). Sealed with a
+PIN (Argon2id + AES-256-GCM). Logos: the coins' official monochrome marks, in
+`assets/logos`.
+
+Needs the [zfirm](https://github.com/ZLabcash/zfirm) repo next to this one as `zfirm/`
+(shared Zcash core). `./build.sh` makes the Kindle binary into `kindle/` and renders
+`preview/`. Copy `kindle/kindlewallet` and `kindle/documents` to the root of the Kindle,
+then open "KindleWallet" from the library. See PLAN.md.

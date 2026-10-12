@@ -1,9 +1,12 @@
 //! KindleWallet: an offline wallet for a jailbroken Kindle.
 //!
 //! One BIP 39 phrase, made on the device from its own randomness, gives:
-//! - Zcash shielded (Orchard, ZIP 32), with the code the ZFlip Flipper wallet uses;
 //! - Bitcoin native SegWit (BIP 84);
-//! - Ethereum (BIP 44, EIP-55 checksummed).
+//! - Ethereum, BNB Chain, Robinhood Chain, Base and Arbitrum (one BIP 44 address);
+//! - Zcash shielded (Orchard, ZIP 32), with the code the ZFlip Flipper wallet uses;
+//! - Solana (SLIP-10 ed25519);
+//! - Monero (Trezor's derivation, so its 25 Monero words restore it anywhere);
+//! - Quantus (post-quantum ML-DSA-87, as its official wallet derives it).
 //!
 //! The phrase is sealed on the Kindle with a PIN (Argon2id + AES-256-GCM). The
 //! Kindle stays offline; the phone app talks to it on local Wi-Fi only.
@@ -11,7 +14,10 @@
 pub mod app;
 pub mod bip32;
 pub mod coins;
+pub mod logos;
+pub mod monero;
 pub mod render;
+pub mod slip10;
 pub mod vault;
 
 pub use zfirm_core::mnemonic;

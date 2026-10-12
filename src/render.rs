@@ -1,27 +1,40 @@
-//! A 1-bit page for the e-ink screen: big pixel text and QR codes, saved as a
-//! grayscale PNG that the Kindle's own `eips -g` draws.
+//! A page for the e-ink screen: big pixel text, QR codes and grayscale logos, saved
+//! as a grayscale PNG that the Kindle's own `eips -g` draws.
 
 use font8x8::UnicodeFonts;
+
+use crate::logos::Gray;
 
 pub struct Page {
     pub w: usize,
     pub h: usize,
-    ink: Vec<bool>,
+    /// 0 is black, 255 white.
+    gray: Vec<u8>,
 }
 
 impl Page {
     pub fn new(w: usize, h: usize) -> Self {
-        Page { w, h, ink: vec![false; w * h] }
+        Page { w, h, gray: vec![255; w * h] }
     }
 
     pub fn ink(&self, x: usize, y: usize) -> bool {
-        self.ink[y * self.w + x]
+        self.gray[y * self.w + x] < 128
     }
 
     pub fn fill(&mut self, x: usize, y: usize, w: usize, h: usize, ink: bool) {
         for yy in y..(y + h).min(self.h) {
             for xx in x..(x + w).min(self.w) {
-                self.ink[yy * self.w + xx] = ink;
+                self.gray[yy * self.w + xx] = if ink { 0 } else { 255 };
+            }
+        }
+    }
+
+    /// Darkens the page with `img`, its top-left corner at (x, y).
+    pub fn image(&mut self, x: usize, y: usize, img: &Gray) {
+        for iy in 0..img.h.min(self.h.saturating_sub(y)) {
+            for ix in 0..img.w.min(self.w.saturating_sub(x)) {
+                let p = &mut self.gray[(y + iy) * self.w + x + ix];
+                *p = (*p).min(img.px[iy * img.w + ix]);
             }
         }
     }
@@ -104,8 +117,7 @@ impl Page {
             enc.set_color(png::ColorType::Grayscale);
             enc.set_depth(png::BitDepth::Eight);
             let mut writer = enc.write_header().expect("png header");
-            let data: Vec<u8> = self.ink.iter().map(|&i| if i { 0 } else { 255 }).collect();
-            writer.write_image_data(&data).expect("png data");
+            writer.write_image_data(&self.gray).expect("png data");
         }
         out
     }

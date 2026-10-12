@@ -6,13 +6,17 @@
 
 use std::{
     fs::File,
-    io::Read,
+    io::{BufRead, BufReader, Read},
     os::fd::AsRawFd,
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
+    sync::mpsc,
 };
 
-use kindlewallet::app::{Action, App};
+use kindlewallet::{
+    app::{Action, App, Detail},
+    coins::Coin,
+};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -28,6 +32,12 @@ fn preview(out: &Path) {
     std::fs::create_dir_all(out).unwrap();
     let dir = out.join("data");
     let _ = std::fs::remove_dir_all(&dir);
+    // The whitepapers built by papers/build.py, when there.
+    let papers = Path::new("kindle/kindlewallet/papers");
+    if papers.is_dir() {
+        std::fs::create_dir_all(&dir).unwrap();
+        let _ = std::os::unix::fs::symlink(std::fs::canonicalize(papers).unwrap(), dir.join("papers"));
+    }
     let mut app = App::new(dir);
     let mut n = 0;
     let mut shot = |app: &mut App, name: &str| {
@@ -51,10 +61,29 @@ fn preview(out: &Path) {
         shot(&mut app, coin.ticker());
         app.act(Action::NewAddress);
         shot(&mut app, &format!("{}_next", coin.ticker()));
+        let details: &[(Detail, &str)] = match coin {
+            Coin::Zcash => &[(Detail::ZcashViewKey, "viewkey")],
+            Coin::Bitcoin => &[(Detail::Zpub, "zpub")],
+            Coin::Monero => &[(Detail::MoneroViewKey, "viewkey"), (Detail::MoneroWords, "words")],
+            _ => &[],
+        };
+        for &(detail, name) in details {
+            app.act(Action::Show(detail));
+            shot(&mut app, &format!("{}_{name}", coin.ticker()));
+            app.act(Action::Back);
+        }
+        if coin == Coin::Bitcoin {
+            app.act(Action::Paper);
+            shot(&mut app, "BTC_paper");
+            app.act(Action::PageTurn(true));
+            shot(&mut app, "BTC_paper_2");
+            app.act(Action::Back);
+        }
         app.act(Action::Home);
     }
-    app.act(Action::ViewKey);
-    shot(&mut app, "viewkey");
+    app.act(Action::ShowWords);
+    shot(&mut app, "recovery_words");
+    app.act(Action::Home);
     app.act(Action::Lock);
     shot(&mut app, "locked");
 }
@@ -167,6 +196,38 @@ impl Touch {
     }
 }
 
+/// What wakes the main loop: a tap, or the Kindle going to sleep or waking.
+enum Event {
+    Tap(usize, usize),
+    Sleep,
+    Wake,
+    TouchGone,
+}
+
+/// Amazon's interface normally redraws the screen around sleep; with it stopped,
+/// KindleWallet listens to the power daemon itself: it locks before sleeping (the
+/// power button locks the wallet) and redraws on waking.
+fn power_events(tx: mpsc::Sender<Event>) {
+    let Ok(mut child) = Command::new("lipc-wait-event")
+        .args(["-m", "com.lab126.powerd", "goingToScreenSaver,outOfScreenSaver,wakeupFromSuspend"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+    else {
+        eprintln!("no lipc-wait-event");
+        return;
+    };
+    let Some(out) = child.stdout.take() else { return };
+    for line in BufReader::new(out).lines().map_while(Result::ok) {
+        eprintln!("power: {line}");
+        let event = if line.starts_with("goingToScreenSaver") { Event::Sleep } else { Event::Wake };
+        if tx.send(event).is_err() {
+            break;
+        }
+    }
+    let _ = child.kill();
+}
+
 fn kindle(dir: PathBuf) {
     // Amazon's interface off, the screensaver held back; both restored on exit.
     sh("lipc-set-prop com.lab126.powerd preventScreenSaver 1");
@@ -176,16 +237,39 @@ fn kindle(dir: PathBuf) {
     eprintln!("screen {w}x{h}");
     let touch = Touch::open(&dir);
     let mut app = App::new(dir);
-    if touch.is_none() {
-        eprintln!("no touch panel found");
-    }
-    if let Some(mut touch) = touch {
-        show(&mut app, w, h);
-        while !app.quit {
-            let Some((x, y)) = touch.tap(w, h) else { break };
-            app.tap(x, y);
-            if !app.quit {
-                show(&mut app, w, h);
+    match touch {
+        None => eprintln!("no touch panel found"),
+        Some(mut touch) => {
+            let (tx, rx) = mpsc::channel();
+            let power = tx.clone();
+            std::thread::spawn(move || power_events(power));
+            std::thread::spawn(move || {
+                loop {
+                    let event = match touch.tap(w, h) {
+                        Some((x, y)) => Event::Tap(x, y),
+                        None => Event::TouchGone,
+                    };
+                    let gone = matches!(event, Event::TouchGone);
+                    if tx.send(event).is_err() || gone {
+                        break;
+                    }
+                }
+            });
+            show(&mut app, w, h);
+            while !app.quit {
+                match rx.recv() {
+                    Ok(Event::Tap(x, y)) => app.tap(x, y),
+                    Ok(Event::Sleep) => app.lock_if_open(),
+                    Ok(Event::Wake) => {}
+                    Ok(Event::TouchGone) | Err(_) => {
+                        eprintln!("touch panel lost");
+                        break;
+                    }
+                }
+                if !app.quit {
+                    show(&mut app, w, h);
+                    eprintln!("drawn {}", app.debug_screen());
+                }
             }
         }
     }
