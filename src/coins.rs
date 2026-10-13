@@ -1,48 +1,58 @@
-//! Receiving addresses for each coin, from the BIP 39 seed. Every derivation follows
-//! the coin's usual wallets, so the same 24 words restore the same funds there.
+//! Receiving addresses for each coin, from the BIP 39 seed (or, for Cardano and
+//! Bittensor, the phrase's entropy). Every derivation follows the coin's usual
+//! wallets, so the same 24 words restore the same funds there.
 
 use bech32::{Hrp, segwit};
-use blake2::Blake2b512;
+use blake2::{Blake2b, Blake2b512, digest::consts::U32};
 use ml_dsa::{Keypair, MlDsa87, SigningKey};
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
-use sha3::Keccak256;
+use sha3::{Keccak256, Sha3_256};
 use zeroize::Zeroizing;
 use zfirm_core::Network;
 
 use crate::bip32::{ExtendedKey, HARDENED};
-use crate::{monero, slip10};
+use crate::{cardano, monero, slip10, starknet, ton};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Coin {
     Bitcoin,
+    /// Ethereum and every EVM network in `evm::NETWORKS` (one address for all).
     Ethereum,
-    Xrp,
     Zcash,
-    Bnb,
     Solana,
     Monero,
     Tron,
-    Base,
-    Arbitrum,
-    Robinhood,
+    Xrp,
+    Sui,
+    Aptos,
+    Near,
+    Stellar,
+    Ton,
+    Cardano,
+    Starknet,
+    Bittensor,
     Quantus,
 }
 
 impl Coin {
     /// In the order of the home grid.
-    pub const ALL: [Coin; 12] = [
+    pub const ALL: [Coin; 16] = [
         Coin::Bitcoin,
         Coin::Ethereum,
-        Coin::Xrp,
         Coin::Zcash,
-        Coin::Bnb,
         Coin::Solana,
         Coin::Monero,
         Coin::Tron,
-        Coin::Base,
-        Coin::Arbitrum,
-        Coin::Robinhood,
+        Coin::Xrp,
+        Coin::Sui,
+        Coin::Aptos,
+        Coin::Near,
+        Coin::Stellar,
+        Coin::Ton,
+        Coin::Cardano,
+        Coin::Starknet,
+        Coin::Bittensor,
         Coin::Quantus,
     ];
 
@@ -50,15 +60,19 @@ impl Coin {
         match self {
             Coin::Bitcoin => "Bitcoin",
             Coin::Ethereum => "Ethereum",
-            Coin::Xrp => "XRP Ledger",
             Coin::Zcash => "Zcash",
-            Coin::Bnb => "BNB Chain",
             Coin::Solana => "Solana",
             Coin::Monero => "Monero",
             Coin::Tron => "Tron",
-            Coin::Robinhood => "Robinhood Chain",
-            Coin::Base => "Base",
-            Coin::Arbitrum => "Arbitrum",
+            Coin::Xrp => "XRP Ledger",
+            Coin::Sui => "Sui",
+            Coin::Aptos => "Aptos",
+            Coin::Near => "NEAR",
+            Coin::Stellar => "Stellar",
+            Coin::Ton => "TON",
+            Coin::Cardano => "Cardano",
+            Coin::Starknet => "Starknet",
+            Coin::Bittensor => "Bittensor",
             Coin::Quantus => "Quantus",
         }
     }
@@ -68,45 +82,73 @@ impl Coin {
         match self {
             Coin::Bitcoin => "BTC",
             Coin::Ethereum => "ETH",
-            Coin::Xrp => "XRP",
             Coin::Zcash => "ZEC",
-            Coin::Bnb => "BNB",
             Coin::Solana => "SOL",
             Coin::Monero => "XMR",
             Coin::Tron => "TRX",
-            Coin::Robinhood => "HOOD",
-            Coin::Base => "BASE",
-            Coin::Arbitrum => "ARB",
+            Coin::Xrp => "XRP",
+            Coin::Sui => "SUI",
+            Coin::Aptos => "APT",
+            Coin::Near => "NEAR",
+            Coin::Stellar => "XLM",
+            Coin::Ton => "TON",
+            Coin::Cardano => "ADA",
+            Coin::Starknet => "STRK",
+            Coin::Bittensor => "TAO",
             Coin::Quantus => "QTC",
         }
     }
 
-    /// The EVM chain id, for the networks that share Ethereum's address.
+    /// Ethereum mainnet's chain id for the EVM group; the other networks are in
+    /// `evm::NETWORKS`.
     pub fn chain_id(self) -> Option<u64> {
         match self {
             Coin::Ethereum => Some(1),
-            Coin::Bnb => Some(56),
-            Coin::Robinhood => Some(4663),
-            Coin::Base => Some(8453),
-            Coin::Arbitrum => Some(42161),
             _ => None,
         }
     }
 
-    /// Receiving address number `index` of account 0.
+    /// Whether the chain has NFTs worth a gallery: Ordinals, ERC-721 on the EVM
+    /// networks, Zcash's zkSNARKs inscriptions, Metaplex, TRC-721, XLS-20, and the
+    /// native objects/tokens of Sui, Aptos, NEAR, TON, Cardano and Starknet.
+    pub fn has_nfts(self) -> bool {
+        !matches!(self, Coin::Monero | Coin::Stellar | Coin::Bittensor | Coin::Quantus)
+    }
+
+    /// Cardano and Bittensor derive from the phrase's entropy, not from the BIP 39
+    /// seed: use `address_from_phrase` for them.
+    pub fn needs_phrase(self) -> bool {
+        matches!(self, Coin::Cardano | Coin::Bittensor)
+    }
+
+    /// Receiving address number `index` of account 0, for the coins that derive from
+    /// the BIP 39 seed (None for those that need the phrase).
     pub fn address(self, seed: &[u8; 64], index: u32) -> Option<String> {
-        if self.chain_id().is_some() {
-            return ethereum(seed, index);
-        }
         match self {
-            Coin::Zcash => zcash(seed, index),
             Coin::Bitcoin => bitcoin(seed, index),
-            Coin::Xrp => xrp(seed, index),
-            Coin::Tron => tron(seed, index),
+            Coin::Ethereum => ethereum(seed, index),
+            Coin::Zcash => zcash(seed, index),
             Coin::Solana => solana(seed, index),
             Coin::Monero => Some(monero::Keys::from_seed(seed).address(index)),
+            Coin::Tron => tron(seed, index),
+            Coin::Xrp => xrp(seed, index),
+            Coin::Sui => sui(seed, index),
+            Coin::Aptos => aptos(seed, index),
+            Coin::Near => near(seed, index),
+            Coin::Stellar => stellar(seed, index),
+            Coin::Ton => ton(seed, index),
+            Coin::Starknet => starknet::address(seed, index),
             Coin::Quantus => quantus(seed, index),
-            _ => None,
+            Coin::Cardano | Coin::Bittensor => None,
+        }
+    }
+
+    /// Receiving address number `index` for any coin, from the phrase and its seed.
+    pub fn address_from_phrase(self, phrase: &str, seed: &[u8; 64], index: u32) -> Option<String> {
+        match self {
+            Coin::Cardano => cardano::address(&crate::entropy(phrase)?, index),
+            Coin::Bittensor => bittensor(&crate::entropy(phrase)?, index),
+            _ => self.address(seed, index),
         }
     }
 }
@@ -147,8 +189,8 @@ pub fn bitcoin_zpub(seed: &[u8; 64]) -> Option<String> {
     Some(bs58::encode(data).into_string())
 }
 
-/// BIP 44: m/44'/60'/0'/0/i, the address with its EIP-55 checksum. Ethereum, BNB
-/// Chain, Base, Arbitrum and Robinhood Chain all use this one address.
+/// BIP 44: m/44'/60'/0'/0/i, the address with its EIP-55 checksum. Every network in
+/// `evm::NETWORKS` uses this one address.
 pub fn ethereum(seed: &[u8; 64], i: u32) -> Option<String> {
     let key = ExtendedKey::derive(seed, &[44 | HARDENED, 60 | HARDENED, HARDENED, 0, i])?;
     let point = key.public(false);
@@ -192,6 +234,95 @@ pub fn solana(seed: &[u8; 64], i: u32) -> Option<String> {
     Some(bs58::encode(key.verifying_key().as_bytes()).into_string())
 }
 
+/// The ed25519 public key of the SLIP-10 key at `path` (all steps hardened).
+fn ed25519_public(seed: &[u8; 64], path: &[u32]) -> [u8; 32] {
+    let secret = Zeroizing::new(slip10::derive(seed, path));
+    ed25519_dalek::SigningKey::from_bytes(&secret).verifying_key().to_bytes()
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// m/44'/784'/i'/0'/0' (Sui Wallet/Slush, Suiet, Ledger): 0x + blake2b-256 of the
+/// ed25519 scheme flag (0x00) and the public key.
+pub fn sui(seed: &[u8; 64], i: u32) -> Option<String> {
+    let mut h = Blake2b::<U32>::new();
+    h.update([0x00]);
+    h.update(ed25519_public(seed, &[44, 784, i, 0, 0]));
+    Some(format!("0x{}", hex(&h.finalize())))
+}
+
+/// m/44'/637'/i'/0'/0' (Petra, Pontem, Ledger): the legacy ed25519 authentication
+/// key, sha3-256 of the public key and the scheme byte 0x00, as the account address.
+pub fn aptos(seed: &[u8; 64], i: u32) -> Option<String> {
+    let mut h = Sha3_256::new();
+    h.update(ed25519_public(seed, &[44, 637, i, 0, 0]));
+    h.update([0x00]);
+    Some(format!("0x{}", hex(&h.finalize())))
+}
+
+/// m/44'/397'/i' (near-seed-phrase, so MyNearWallet, Meteor, HERE): the implicit
+/// account, the ed25519 public key in hex (0 is the wallets' only key; the next ones
+/// follow the same pattern).
+pub fn near(seed: &[u8; 64], i: u32) -> Option<String> {
+    Some(hex(&ed25519_public(seed, &[44, 397, i])))
+}
+
+/// SEP-0005: m/44'/148'/i' (Lobstr, Freighter, Ledger), the public key as a StrKey
+/// (G…): version byte 6 << 3, key, CRC-16/XMODEM little-endian, base32.
+pub fn stellar(seed: &[u8; 64], i: u32) -> Option<String> {
+    let mut data = vec![6 << 3];
+    data.extend_from_slice(&ed25519_public(seed, &[44, 148, i]));
+    let check = ton::crc16(&data);
+    data.extend_from_slice(&check.to_le_bytes());
+    Some(base32(&data))
+}
+
+/// RFC 4648 base32 without padding.
+fn base32(data: &[u8]) -> String {
+    const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    let mut out = String::new();
+    let (mut acc, mut bits) = (0u32, 0);
+    for &b in data {
+        acc = acc << 8 | b as u32;
+        bits += 8;
+        while bits >= 5 {
+            bits -= 5;
+            out.push(ALPHABET[(acc >> bits) as usize & 31] as char);
+        }
+    }
+    if bits > 0 {
+        out.push(ALPHABET[(acc << (5 - bits)) as usize & 31] as char);
+    }
+    out
+}
+
+/// m/44'/607'/i' (Trust Wallet, the BIP 39 TON wallets): the wallet v4r2 address,
+/// non-bounceable (UQ…). See `ton`.
+pub fn ton(seed: &[u8; 64], i: u32) -> Option<String> {
+    Some(ton::friendly(&ton::v4r2_account(&ed25519_public(seed, &[44, 607, i]))))
+}
+
+/// Bittensor (btcli, the Bittensor wallet, Talisman, polkadot.js), the Substrate way:
+/// the sr25519 mini secret is the first 32 bytes of PBKDF2-HMAC-SHA512 over the
+/// phrase's entropy (salt "mnemonic", 2048 rounds), expanded Ed25519-style; the
+/// account is its public key in SS58 with prefix 42 (5…). Address 0 is the root
+/// account (the coldkey btcli makes); address i is the hard derivation //i.
+pub fn bittensor(entropy: &[u8], i: u32) -> Option<String> {
+    use schnorrkel::{ExpansionMode, MiniSecretKey, derive::ChainCode};
+    let mut mini = Zeroizing::new([0u8; 64]);
+    pbkdf2::pbkdf2_hmac::<sha2::Sha512>(entropy, b"mnemonic", 2048, &mut *mini);
+    let mut secret = MiniSecretKey::from_bytes(&mini[..32]).ok()?.expand(ExpansionMode::Ed25519);
+    if i > 0 {
+        // A numeric junction is the SCALE u64, zero-padded to the 32-byte chain code.
+        let mut code = [0u8; 32];
+        code[..8].copy_from_slice(&(i as u64).to_le_bytes());
+        secret = secret.hard_derive_mini_secret_key(Some(ChainCode(code)), b"").0.expand(ExpansionMode::Ed25519);
+    }
+    Some(ss58(42, &secret.to_public().to_bytes()))
+}
+
 /// Quantus, as its official wallet makes it: an HD tree keyed "Dilithium seed"
 /// (SLIP-10 shaped, hardened only) to m/44'/189189'/i'/0'/0', whose key seeds an
 /// ML-DSA-87 key pair (FIPS 204); the account is the Poseidon2 hash of the public
@@ -203,9 +334,14 @@ pub fn quantus(seed: &[u8; 64], i: u32) -> Option<String> {
     Some(ss58(189, &qp_poseidon_core::hash_bytes(public.as_slice())))
 }
 
-/// SS58 with a two-byte prefix (formats 64 to 16383).
+/// SS58: the network prefix (one byte below 64, two bytes up to 16383), the account,
+/// and two bytes of blake2b-512("SS58PRE" ‖ both).
 fn ss58(format: u16, account: &[u8; 32]) -> String {
-    let mut data = vec![((format & 0b1111_1100) >> 2) as u8 | 0b0100_0000, (format >> 8) as u8 | ((format & 0b11) as u8) << 6];
+    let mut data = if format < 64 {
+        vec![format as u8]
+    } else {
+        vec![((format & 0b1111_1100) >> 2) as u8 | 0b0100_0000, (format >> 8) as u8 | ((format & 0b11) as u8) << 6]
+    };
     data.extend_from_slice(account);
     let mut h = Blake2b512::new();
     h.update(b"SS58PRE");

@@ -1,0 +1,41 @@
+{
+  "about": "KindleWallet phone link v1 test vectors (kindlewallet/tests/link_vectors.rs). Hex unless named _b64 (base64url, no padding). Scalars are X25519 secret keys before clamping.",
+  "dh1": "26c2c17fdb82161cb21ad16e721315355b64d1763119b10bfc962530dc7cc163",
+  "dh2": "a84dc7c3c8f058b1b2dc4cd1e9b5dc0a7987f88b6a9564cde3391fc421159e77",
+  "dh3": "6900c737dd74bf97502a30710b49876ad2ce1a036534a938e24fa248125dd453",
+  "kindle_ephemeral_public": "244fe3b963e899dd295baffce248d3530f3a9a7479ba063002680ebfe7adad49",
+  "kindle_ephemeral_secret": "6162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f80",
+  "kindle_hello": "02244fe3b963e899dd295baffce248d3530f3a9a7479ba063002680ebfe7adad49",
+  "kindle_static_public": "07a37cbc142093c8b755dc1b10e86cb426374ad16aa853ed0bdfc0b2b86d1c7c",
+  "kindle_static_public_b64": "B6N8vBQgk8i3VdwbEOhstCY3StFqqFPtC9_AsrhtHHw",
+  "kindle_static_secret": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+  "label": "zfirm-kindle-v1",
+  "nfts_frame_1_42_7777": "5a014008000000030001002a00611e",
+  "nfts_ok_frame": "5a01c000000000",
+  "pair_uri": "zfirm-kindle:?h=192.168.1.23:7700&k=B6N8vBQgk8i3VdwbEOhstCY3StFqqFPtC9_AsrhtHHw&p=oKGio6SlpqeoqaqrrK2urw&n=Kindle",
+  "phone_ephemeral_public": "64b101b1d0be5a8704bd078f9895001fc03e8e9f9522f188dd128d9846d48466",
+  "phone_ephemeral_secret": "4142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f60",
+  "phone_hello": "0164b101b1d0be5a8704bd078f9895001fc03e8e9f9522f188dd128d9846d484665869aff450549732cbaaed5e5df9b30a6da31cb0e5742bad5ad4a1a768f1a67b",
+  "phone_static_public": "5869aff450549732cbaaed5e5df9b30a6da31cb0e5742bad5ad4a1a768f1a67b",
+  "phone_static_public_b64": "WGmv9FBUlzLLqu1eXfmzCm2jHLDldCutWtShp2jxpns",
+  "phone_static_secret": "2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40",
+  "psk": "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+  "psk_b64": "oKGio6SlpqeoqaqrrK2urw",
+  "th": "56b46cfbb439e6d6b7d142c1bfa007033eb152484c02bfa72d86097f3bd6b62b",
+  "th_check": "56b46cfbb439e6d6b7d142c1bfa007033eb152484c02bfa72d86097f3bd6b62b",
+  "with_psk": {
+    "hello_frame": "5a010100000000",
+    "k_kp": "73f493f9a0b01d13f6e5aeaf954ac5c869bd691146835cf07b9619551dd69c55",
+    "k_pk": "70d35f0b1fa627537077c60c5fb9402abe17e37b313806f0ca0491fc3b69c368",
+    "kindle_record_0_pong": "00170458d9c834ba1f8ed68bb9e7cacf1c591eecab6d581d84",
+    "phone_record_0_ping": "001774a4a31fcbd0f374e1630e4c8c4b0e754c77679501ff46",
+    "phone_record_1_hello": "001783f1e8b4111fb54c7eb355df543127e9b8bb90f60840fc",
+    "ping_frame": "5a010500000000",
+    "pong_frame": "5a018500000000"
+  },
+  "with_zero_psk": {
+    "k_kp": "30595d491708dd134c0d0a0cbc81c3cdb1c8428a911b1c47c5cbf1bc5eab2396",
+    "k_pk": "596b30b8e80bf7ade3cc3fb3596ebcc56cd55af788610591a8b142d985fbeaa9",
+    "phone_record_0_ping": "0017d82cb6aa7502562a2855a41c842edd42f6d63a1e6ccc39"
+  }
+}

@@ -2,10 +2,13 @@
 //!
 //! One BIP 39 phrase, made on the device from its own randomness, gives:
 //! - Bitcoin native SegWit (BIP 84);
-//! - Ethereum, BNB Chain, Robinhood Chain, Base and Arbitrum (one BIP 44 address);
+//! - Ethereum and 23 other EVM networks (one BIP 44 address, see `evm`);
 //! - Zcash shielded (Orchard, ZIP 32), with the code the ZFlip Flipper wallet uses;
-//! - Solana (SLIP-10 ed25519);
+//! - Solana, Sui, Aptos, NEAR, Stellar and TON (SLIP-10 ed25519);
 //! - Monero (Trezor's derivation, so its 25 Monero words restore it anywhere);
+//! - Tron and the XRP Ledger (BIP 44 secp256k1);
+//! - Cardano (CIP-1852, Icarus master key) and Starknet (Argent X);
+//! - Bittensor (Substrate sr25519);
 //! - Quantus (post-quantum ML-DSA-87, as its official wallet derives it).
 //!
 //! The phrase is sealed on the Kindle with a PIN (Argon2id + AES-256-GCM). The
@@ -13,12 +16,19 @@
 
 pub mod app;
 pub mod bip32;
+pub mod cardano;
 pub mod coins;
+pub mod evm;
+pub mod link;
 pub mod logos;
 pub mod monero;
+pub mod nft;
 pub mod render;
 pub mod slip10;
+pub mod starknet;
+pub mod ton;
 pub mod vault;
+pub mod wifi;
 
 pub use zfirm_core::mnemonic;
 
@@ -46,4 +56,11 @@ pub fn check_phrase(words: &str) -> Option<String> {
 /// The BIP 39 seed (no passphrase).
 pub fn seed(phrase: &str) -> [u8; 64] {
     mnemonic::to_seed(phrase, "", |_| {})
+}
+
+/// The entropy behind a valid phrase (16 to 32 bytes), for the coins that derive
+/// from it rather than from the seed (Cardano, Bittensor).
+pub fn entropy(phrase: &str) -> Option<zeroize::Zeroizing<Vec<u8>>> {
+    let indices = mnemonic::parse(phrase, &english()).ok()?;
+    mnemonic::entropy_of(&indices).ok().map(zeroize::Zeroizing::new)
 }

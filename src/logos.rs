@@ -56,15 +56,51 @@ pub fn logo(coin: Coin) -> Gray {
     Gray::decode(match coin {
         Coin::Bitcoin => include_bytes!("../assets/logos/bitcoin.png"),
         Coin::Ethereum => include_bytes!("../assets/logos/ethereum.png"),
-        Coin::Xrp => include_bytes!("../assets/logos/xrp.png"),
         Coin::Zcash => include_bytes!("../assets/logos/zcash.png"),
-        Coin::Bnb => include_bytes!("../assets/logos/binance.png"),
         Coin::Solana => include_bytes!("../assets/logos/solana.png"),
         Coin::Monero => include_bytes!("../assets/logos/monero.png"),
         Coin::Tron => include_bytes!("../assets/logos/tron.png"),
-        Coin::Robinhood => include_bytes!("../assets/logos/robinhood.png"),
-        Coin::Base => include_bytes!("../assets/logos/base.png"),
-        Coin::Arbitrum => include_bytes!("../assets/logos/arbitrum.png"),
+        Coin::Xrp => include_bytes!("../assets/logos/xrp.png"),
+        Coin::Sui => include_bytes!("../assets/logos/sui.png"),
+        Coin::Aptos => include_bytes!("../assets/logos/aptos.png"),
+        Coin::Near => include_bytes!("../assets/logos/near.png"),
+        Coin::Stellar => include_bytes!("../assets/logos/stellar.png"),
+        Coin::Ton => include_bytes!("../assets/logos/ton.png"),
+        Coin::Cardano => include_bytes!("../assets/logos/cardano.png"),
+        Coin::Starknet => include_bytes!("../assets/logos/starknet.png"),
+        Coin::Bittensor => include_bytes!("../assets/logos/bittensor.png"),
         Coin::Quantus => include_bytes!("../assets/logos/quantus.png"),
     })
+}
+
+/// An EVM network's logo, by its `evm::EvmNetwork::key`.
+pub fn evm_logo(key: &str) -> Option<Gray> {
+    let bytes: &[u8] = match key {
+        "ethereum" => include_bytes!("../assets/logos/ethereum.png"),
+        "base" => include_bytes!("../assets/logos/base.png"),
+        "binance" => include_bytes!("../assets/logos/binance.png"),
+        "arbitrum" => include_bytes!("../assets/logos/arbitrum.png"),
+        "hyperevm" => include_bytes!("../assets/logos/hyperevm.png"),
+        "robinhood" => include_bytes!("../assets/logos/robinhood.png"),
+        "monad" => include_bytes!("../assets/logos/monad.png"),
+        "polygon" => include_bytes!("../assets/logos/polygon.png"),
+        "avalanche" => include_bytes!("../assets/logos/avalanche.png"),
+        "plasma" => include_bytes!("../assets/logos/plasma.png"),
+        "optimism" => include_bytes!("../assets/logos/optimism.png"),
+        "ink" => include_bytes!("../assets/logos/ink.png"),
+        "cronos" => include_bytes!("../assets/logos/cronos.png"),
+        "mantle" => include_bytes!("../assets/logos/mantle.png"),
+        "gnosis" => include_bytes!("../assets/logos/gnosis.png"),
+        "linea" => include_bytes!("../assets/logos/linea.png"),
+        "sonic" => include_bytes!("../assets/logos/sonic.png"),
+        "scroll" => include_bytes!("../assets/logos/scroll.png"),
+        "worldchain" => include_bytes!("../assets/logos/worldchain.png"),
+        "unichain" => include_bytes!("../assets/logos/unichain.png"),
+        "berachain" => include_bytes!("../assets/logos/berachain.png"),
+        "zksync" => include_bytes!("../assets/logos/zksync.png"),
+        "celo" => include_bytes!("../assets/logos/celo.png"),
+        "sei" => include_bytes!("../assets/logos/sei.png"),
+        _ => return None,
+    };
+    Some(Gray::decode(bytes))
 }

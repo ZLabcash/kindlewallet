@@ -22,6 +22,32 @@ the projects' own sites and lays them out again for the 600 × 800 screen (PDFs
 reflowed word by word, the way k2pdfopt does; Markdown and HTML set in Literata), into
 `kindle/kindlewallet/papers/<TICKER>/NNN.png`. Base and Robinhood Chain publish none.
 
+## Phone link (Zcash only)
+
+On the Zcash screen, "Connect phone" switches the Kindle's Wi-Fi on behind a firewall
+(in: only TCP 7700 from the local network; out: only the local network; IPv6 shut)
+and shows a pairing QR for ZApp. The phone holds the viewing key, builds and proves
+transactions; the Kindle checks each one, shows every payment, memo and the fee, and
+signs only when a finger stays on "Hold to sign" for 1.5 s. Inside an encrypted
+channel (X25519, HKDF-SHA256, ChaCha20-Poly1305) runs the same zfirm protocol the
+Flipper speaks over Bluetooth. A paired phone reconnects without the QR; "Forget
+phones" undoes that. Leaving Zcash, locking, sleeping or exiting puts the firewall
+back and switches Wi-Fi off. Fixed-key vectors for the channel are in
+`tests/link_vectors.json`. The other coins stay receive-only.
+
+To try ZApp against a computer: `cargo run --release -- --serve DIR [--port 7700]
+[--bind IP] [--pin PIN] [--auto-approve]` makes a test wallet in DIR (the BIP 39 test
+phrase "abandon ×23 art", never a real one), prints the pairing QR's text, saves the
+screen as `DIR/screen.png` and asks on the terminal before pairing or signing.
+
+## zkSNARKs
+
+The ZEC screen's "zkSNARKs" opens the whole collection offline: 10,000 portraits of
+26 × 26 pixels, in gray, a grid of 30 per page, and "Mine" for those the phone says
+your zilkroad account holds. `uv run --with pillow nft/build.py CACHE_DIR
+kindle/kindlewallet` downloads them (api.zscan.cash, traits from zilkroad) and packs
+them into `kindle/kindlewallet/nft/` (not kept here, like the whitepapers).
+
 Each derivation is checked against its published vectors (`cargo test`). Sealed with a
 PIN (Argon2id + AES-256-GCM). Logos: the coins' official monochrome marks, in
 `assets/logos`.
@@ -36,7 +62,8 @@ then open "KindleWallet" from the library. See PLAN.md.
 1. Jailbreak the Kindle (a Kindle 10th generation on 5.18.1 used
    [SpiderCat](https://kindlemodding.org/jailbreaking/SpiderCat/): a book to open, no ads needed).
 2. `./build.sh`, then copy `kindle/kindlewallet` and `kindle/documents` to the root of the
-   Kindle's storage (and `kindle/kindlewallet/papers` after `papers/build.py`).
+   Kindle's storage (and `kindle/kindlewallet/papers` after `papers/build.py`,
+   `kindle/kindlewallet/nft` after `nft/build.py`).
 3. Open "KindleWallet" from the library. Exit gives the Kindle back; the power button
    locks the wallet.
 
